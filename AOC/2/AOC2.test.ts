@@ -1,15 +1,13 @@
 import {
-    getBoxIdsLetterFrequencies
+    filterObjectsByValue,
 } from './AOC2';
 
-test('getBoxIdsLetterFrequencies should multiply frequency of 2 letters and ' +
-    '3 letters', () => {
-        const x = ['aaaee', 'aaabbb', 'fabacaf'];
-        expect(getBoxIdsLetterFrequencies(x)).toEqual(6);
-    });
+const eq = (x: number) => (y: number) => x === y;
 
-test('getBoxIdsLetterFrequencies should multiply frequency of 2 letters and ' +
-    '3 letters', () => {
-        const x = ['aaaee', 'aaabbb', 'fabacaf'];
-        expect(getBoxIdsLetterFrequencies(x)).toEqual(6);
-    });
+test('filterObjectsByValue should return array with found numbers', () => {
+    const letterFrequencies = [{
+        a: 3,
+        e: 2
+    }];
+    expect(filterObjectsByValue(letterFrequencies)(eq(2)).length).toEqual(1);
+});

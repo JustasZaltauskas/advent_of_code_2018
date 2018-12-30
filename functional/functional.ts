@@ -53,3 +53,5 @@ type Tsetter = (o: AnyObject, k: any, v: any) => AnyObject;
 export const setter: Tsetter = (o, k, v) => ({ ...o, [k]: v });
 
 export const identity = (x: any) => x;
+
+export const eq = (x: any) => (y: any) => x === y;

@@ -1,4 +1,4 @@
-import { countBy, compose } from '../../functional';
+import { countBy, eq } from '../../functional';
 const fs = require('fs');
 const path = require('path');
 /*
@@ -14,11 +14,16 @@ const ids: string[] = fs
     .split('\n');
 
 export const getBoxIdsLetterFrequencies = (ids: string[]) => {
-    const lettersCount = ids.map((id) => countBy(id));
-    return lettersCount.filter((o = {}) => Object.values(o).filter(x => x === 2).length).length *
-        lettersCount.filter((o = {}) => Object.values(o).filter(x => x === 3).length).length
+    const lettersCount = ids.map((id) => countBy(id)) as Array<object>;
+    const lettersFilter = filterObjectsByValue(lettersCount);
+    return lettersFilter(eq(2)).length * lettersFilter(eq(3)).length;
 }
 
-type TfilterObjectValues = <T>(o: T, predicate: (x: keyof T) => boolean) => any[];
-export const filterObjectValues: TfilterObjectValues = (o, predicate) =>
-    Object.values(o).filter(predicate);
+type TfilterObjectsByValue = (o: object[]) =>
+    (predicate: (x: any) => boolean) =>
+        any[];
+
+export const filterObjectsByValue: TfilterObjectsByValue = (arr) =>
+    (predicate) => arr.filter((x) => Object.values(x).filter(predicate).length);
+
+console.log(getBoxIdsLetterFrequencies(ids));
