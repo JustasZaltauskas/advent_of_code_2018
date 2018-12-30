@@ -1,0 +1,23 @@
+{
+  "name": "environment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.tsx",
+  "scripts": {
+    "test": "jest",
+    "integration": "jest -c jest.config.integration.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^23.3.10",
+    "@types/lodash": "^4.14.119",
+    "@types/node": "^10.12.18",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11",
+    "typescript": "^3.2.2"
+  }
+}
