@@ -1,4 +1,4 @@
-import { countBy, eq } from '../../functional';
+import { countBy, eq } from '../../utils/functional';
 const fs = require('fs');
 const path = require('path');
 /*

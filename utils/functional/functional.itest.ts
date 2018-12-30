@@ -1,4 +1,4 @@
-import { countBy } from './functional';
+import { countBy } from '../functional';
 
 test('countBy should count each string symbol', () => {
     expect(countBy('aabb')).toEqual({
