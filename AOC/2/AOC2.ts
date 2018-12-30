@@ -1,5 +1,5 @@
 import { countBy, eq } from '../../utils/functional';
-const fs = require('fs');
+import { readInput } from '../../utils/IO';
 const path = require('path');
 /*
 Rules:
@@ -9,9 +9,8 @@ Rules:
  3. Get checksum = sum2 * sum3.
 */
 
-const ids: string[] = fs
-    .readFileSync(path.resolve(__dirname, 'input.ts'), 'utf8')
-    .split('\n');
+const ids: string[] = readInput(path.resolve(__dirname, 'input.ts'))
+    .map(Number);
 
 export const getBoxIdsLetterFrequencies = (ids: string[]) => {
     const lettersCount = ids.map((id) => countBy(id)) as Array<object>;
@@ -25,5 +24,3 @@ type TfilterObjectsByValue = (o: object[]) =>
 
 export const filterObjectsByValue: TfilterObjectsByValue = (arr) =>
     (predicate) => arr.filter((x) => Object.values(x).filter(predicate).length);
-
-console.log(getBoxIdsLetterFrequencies(ids));

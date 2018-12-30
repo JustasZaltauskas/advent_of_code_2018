@@ -1,8 +1,7 @@
-const fs = require('fs');
+import { readInput } from '../../utils/IO';
+const path = require('path');
 
-const numbers: number[] = fs
-    .readFileSync('./input.ts', 'utf8')
-    .split('\n')
+const numbers: number[] = readInput(path.resolve(__dirname, 'input.ts'))
     .map(Number);
 
 type TfrequencyCache = { [number: number]: boolean };
