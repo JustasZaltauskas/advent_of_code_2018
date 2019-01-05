@@ -1,22 +1,24 @@
 import { countBy, compose, groupBy, eq, remove } from '../../utils/functional';
 import { readInput } from '../../utils/IO';
 const path = require('path');
+
+const ids: string[] = readInput(path.resolve(__dirname, 'input.ts'));
 /*
+Part 1
+
 Rules:
  1. Count repeating letters in ID.
  2. Count how many ids have 2 and 3 repeating letters.
     sum(x) = number of ids that have x repeating letters.
  3. Get checksum = sum2 * sum3.
 */
-
-const ids: string[] = readInput(path.resolve(__dirname, 'input.ts'));
-
 export const getBoxIdsLetterFrequencies = (ids: string[]) => {
     const lettersCount = ids.map((id) => countBy(id)) as Array<object>;
     const lettersFilter = filterObjectsByValue(lettersCount);
     return lettersFilter(eq(2)).length * lettersFilter(eq(3)).length;
 }
 
+// Part 2
 export const commonLettersBetweenBoxes = (ids: string[]) => {
     for (let i = 0; i < ids.length; i++) {
         const id = ids[i];
