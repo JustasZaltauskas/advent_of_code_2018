@@ -1,19 +1,12 @@
 import {
+    arraySetter,
     countBy,
-    setter,
     increment,
-} from './functional';
-import { notImplementedError } from '../errors';
-
-test('countBy should count number of times result was returned by ' +
-    'iteratee', () => {
-        expect(countBy([1, 1.4, 2, 3], Math.floor)).toEqual({
-            1: 2,
-            2: 1,
-            3: 1
-        })
-    }
-);
+    setter,
+    groupBy,
+} from './index';
+import * as collection from './index';
+import { notImplementedError } from '../../errors';
 
 test('countBy should throw error if collection is object', () => {
     expect(() => { countBy({ a: 1, b: 1, c: 1 }, Math.floor) }).toThrow(Error);
@@ -33,4 +26,21 @@ test('increment should increment object key by 1', () => {
 
 test('increment should set key to 1 if key does not exist', () => {
     expect(increment({}, 'a')).toHaveProperty('a', 1);
+});
+
+describe('arraySetter', () => {
+    test('should add array with given value if object key does not exist',
+        () => {
+            expect(arraySetter({}, 1, 1)).toEqual({
+                1: [1]
+            });
+        })
+
+    test('should add value to array if object key already exists',
+        () => {
+            const arr = [1];
+            expect(arraySetter({ 1: [...arr] }, 1, 2)).toEqual({
+                1: [...arr, 2]
+            });
+        })
 });
