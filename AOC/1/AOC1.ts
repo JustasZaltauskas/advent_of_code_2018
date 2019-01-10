@@ -1,7 +1,7 @@
 import { readInput } from '../../utils/IO';
 const path = require('path');
 
-const numbers: number[] = readInput(path.resolve(__dirname, 'input.ts'))
+const numbers: number[] = readInput(path.resolve(__dirname, 'input'))
     .map(Number);
 
 type TfrequencyCache = { [number: number]: boolean };

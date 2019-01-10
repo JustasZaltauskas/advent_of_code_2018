@@ -1,8 +1,8 @@
-import { countBy, compose, groupBy, eq, remove } from '../../utils/functional';
+import { countBy, groupBy, eq, remove } from '../../utils/functional';
 import { readInput } from '../../utils/IO';
 const path = require('path');
 
-const ids: string[] = readInput(path.resolve(__dirname, 'input.ts'));
+const ids: string[] = readInput(path.resolve(__dirname, 'input'));
 /*
 Part 1
 
