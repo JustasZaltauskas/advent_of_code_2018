@@ -1,6 +1,6 @@
 import { countBy, groupBy, eq, remove } from '../../utils/functional';
 import { readInput } from '../../utils/IO';
-const path = require('path');
+import path from 'path';
 
 const ids: string[] = readInput(path.resolve(__dirname, 'input'));
 /*

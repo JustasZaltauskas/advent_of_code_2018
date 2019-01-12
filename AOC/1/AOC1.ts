@@ -1,5 +1,5 @@
 import { readInput } from '../../utils/IO';
-const path = require('path');
+import path from 'path';
 
 const numbers: number[] = readInput(path.resolve(__dirname, 'input'))
     .map(Number);
