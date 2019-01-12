@@ -11,13 +11,15 @@ const input: string[][] = readInput(path.resolve(__dirname, 'input'))
     .map((s: string) => s.replace('[', '').split('] '));
 
 interface ISleepData {
-    [id: string]: {
-        minutes: number[];
-        sleepTime: number;
-    }
+    [id: string]: IGuardSleep;
 }
 
-const findSleepyGuard = (input: string[][]) => {
+interface IGuardSleep {
+    minutes: number[];
+    sleepTime: number;
+}
+
+const getSleepData = (input: string[][]) => {
     input.sort();
 
     let guardId: string;
@@ -52,14 +54,47 @@ const findSleepyGuard = (input: string[][]) => {
         }
     });
 
-    const [sleepyGuardId, sleepyGuard] = maxEntry(
-        sleepData, (x: ISleepData) => x.sleepTime);
-    const [maxMinute] = maxEntry(sleepyGuard.minutes);
+    return sleepData;
+}
+
+const findSleepyGuard = (input: string[][]): [string, IGuardSleep] => {
+    const sleepData = getSleepData(input);
+    return maxEntry(sleepData, (x: IGuardSleep) => x.sleepTime);
+}
+
+const getGuardMaxSleepMinute = (input: string[][]) => {
+    const [sleepyGuardId, sleepyGuard] = findSleepyGuard(input);
+    const [maxMinute, _] = maxEntry(sleepyGuard.minutes);
 
     return Number(sleepyGuardId) * Number(maxMinute);
+}
+
+const mostAsleepOnTheSameMinute = (input: string[][]) => {
+    const sleepData = getSleepData(input);
+
+    let maxMinuteCount = Number.MIN_VALUE;
+    let maxMinute: string = '';
+    let guardId: string = '';
+
+    Object.entries(sleepData).forEach(([id, guard]) => {
+        const [minute, minuteCount] = maxEntry(guard.minutes);
+
+        if (maxMinuteCount < minuteCount) {
+            maxMinute = minute;
+            maxMinuteCount = minuteCount;
+            guardId = id;
+        }
+    });
+
+    if (guardId && maxMinute) {
+        return Number(guardId) * Number(maxMinute);
+    } else {
+        return null;
+    }
 }
 
 const maxEntry = (o: object, getValue: Function = identity) => Object.entries(o)
     .reduce((acc, x) => getValue(acc[1]) < getValue(x[1]) ? x : acc);
 
-console.log(findSleepyGuard(input));
+console.log(getGuardMaxSleepMinute(input));
+console.log(mostAsleepOnTheSameMinute(input));
