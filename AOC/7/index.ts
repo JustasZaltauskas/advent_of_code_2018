@@ -1,6 +1,5 @@
 import { readInput } from '../../utils/IO';
 import * as path from 'path';
-import { start } from 'repl';
 
 // Step P must be finished before step R can begin.
 const input: string[][] = readInput(path.resolve(__dirname, 'input'))

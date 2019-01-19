@@ -1,15 +1,16 @@
 import { readInput } from '../../utils/IO';
 import * as path from 'path';
 
+const test = '2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2';
 const file = readInput(path.resolve(__dirname, 'input'))[0];
 const input: number[] = file
     .split(' ')
-    .map(Number)
+    .map(Number);
 
 const arrayIterator = (arr: number[]) => {
     let i = 0;
     return () => (++i, arr[i - 1]);
-}
+};
 
 const nextInt = arrayIterator(input);
 
@@ -30,9 +31,7 @@ const readTree = (): Tree => {
     }
 
     return [children, metaData];
-}
-
-const root = readTree();
+};
 
 const getMetaData = (children: Tree[], metaData: number[]) => {
     let sum = 0;
@@ -41,7 +40,28 @@ const getMetaData = (children: Tree[], metaData: number[]) => {
     children.forEach(x => sum += getMetaData(...x));
 
     return sum;
-}
+};
 
+const getNodeValue = (children: Tree[], metaData: number[]) => {
+    let nodeValue = 0;
+    
+    for (let i = 0; i < metaData.length; i++) {
+        const md = metaData[i];
+        const child = children[md - 1];
+
+        if (!child) {
+            continue;
+        } else if (child[0].length === 0) {
+            nodeValue += getMetaData(...child);
+        } else {
+            nodeValue += getNodeValue(...child);
+        }
+    }
+    
+    return nodeValue;
+};
+
+const root = readTree();
 const metaData = getMetaData(root[0], root[1]);
-console.log(metaData);
+const nodeValue = getNodeValue(root[0], root[1]);
+console.log(nodeValue);
