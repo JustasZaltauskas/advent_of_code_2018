@@ -12,15 +12,17 @@ class MarbleGame {
     Map<Long, Long> scores = new HashMap<Long, Long>();
 
     marbles.add(new Long(0));
-
+    
     for (long marble = 1; marble < maxMarble + 1; marble++) {
+      long player = marble % players;
+
       if (marble % 23 == 0) {
         this.rotate(marbles, 7);
 
-        long previousScore = scores.get(marble % players) != null ?
-          scores.get(marble % players) : 0;
+        long previousScore = scores.get(player) != null ?
+          scores.get(player) : 0;
         
-        scores.put(marble % players, previousScore + marbles.removeLast() + marble);
+        scores.put(player, previousScore + marbles.removeLast() + marble);
         this.rotate(marbles, -1);
       } else {
         marbles = this.rotate(marbles, -1);
