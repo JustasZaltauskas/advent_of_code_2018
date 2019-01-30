@@ -16,7 +16,7 @@ const visualise = (moves: Move[], gridSize: number = 100) => {
     const maxY = Math.max(...moves.map((x) => x[1]));
     let matrix = '';
 
-    if ( gridSize >= maxX - minX && gridSize >= maxY - minY) {
+    if (gridSize >= maxX - minX && gridSize >= maxY - minY) {
         for (let y = minY; y <= maxY; y++) {
             for (let x = minX; x <= maxX; x++) {
                 if (moves.some(([mx, my]) => mx === x && my === y)) {
@@ -28,14 +28,21 @@ const visualise = (moves: Move[], gridSize: number = 100) => {
             matrix += '\n';
         }
         console.log(matrix);
+        return true;
     }
+
+    return false;
 };
 
 const moveTo = (n: number, moves: Move[]) => {
     for (let i = 0; i < n; i++) {
-        visualise(moves);
+        const isVisualised = visualise(moves);
+        if (isVisualised) {
+            console.log(i);
+            
+        }
         moves = move(moves);
     }
 }
 
-moveTo(100000, input);
+moveTo(1000000, input);
