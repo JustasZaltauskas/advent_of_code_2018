@@ -12,6 +12,7 @@ import path from 'path';
     Subtracting 5 produces 9 - 5 = 4.
  */
 type SerialNumber = number;
+type TopLeft = [number, number];
 const serialNumber: SerialNumber = readInput(path.resolve(__dirname, 'input'))
     .map(Number)[0];
 const gridSize = 300;
@@ -35,28 +36,28 @@ const getPowerLevel = (n: SerialNumber, x: number, y: number) => {
 }
 
 const largestSquare = (grid: number[][], squareSize: number) => {
-    let max = Number.MIN_VALUE;
-    let coord = [0, 0];
+    let max = Number.NEGATIVE_INFINITY;
+    let coord: TopLeft = [0, 0];
     const gridBound = grid.length - (squareSize - 1);
 
     for (let y = 0; y < gridBound; y++) {
         for (let x = 0; x < gridBound; x++) {
             let fuel = 0;
-            let topLeft = [x, y];
+            let topLeft: TopLeft = [x, y];
 
             for (let j = y; j < y + squareSize; j++) {
                 for (let i = x; i < x + squareSize; i++) {
                     fuel += grid[i][j];
                 }
             }
+
             if (fuel > max) {
                 max = fuel;
                 coord = topLeft;
             }
         }
     }
-
-    return coord;
+    return [coord, max] as [TopLeft, number];
 };
 
 const grid: number[][] = [];
@@ -67,7 +68,24 @@ for (let x = 0; x < gridSize; x++) {
     }
 }
 
-const topLeft = largestSquare(grid, 3);
 
-console.log(topLeft);
+let maxTopLeft: TopLeft = [0, 0];
+let maxSize = 0;
+let maxSquare = 0;
+
+for (let i = 1; i <= gridSize; i++) {
+    const [topLeft, size] = largestSquare(grid, i);
+    
+    if (size >= maxSize) {
+        maxSize = size;
+        maxTopLeft = topLeft;
+        maxSquare = i;
+    } else if (size < 0) {
+        break
+    }
+}
+
+console.log(`maxSize: ${maxSize}`);
+console.log(`maxSquare: ${maxSquare}`);
+console.log(`maxTopLeft: ${maxTopLeft}`);
  
