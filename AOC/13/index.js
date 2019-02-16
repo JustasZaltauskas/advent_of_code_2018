@@ -11,22 +11,23 @@ const fs = require('fs');
 const grid = fs.readFileSync('./input.txt', 'utf8')
     .split('\n')
     .map(s => s.split(''));
-const moves = {
-    '<': [-1, 0],
-    '^': [0, -1],
-    '>': [1, 0],
-    'v': [0, 1],
-};
-const cartsSymbols = Object.keys(moves);
 
-// Cart = [x, y, direction, intersections]
+// up, right, down, left
+const DR = [-1, 0, 1, 0];
+const DC = [0, 1, 0, -1];
+const createCart = ({c, r, d, inter, dead=false}={}) => ({c, r, d, inter, dead});
+const direction = {'^': 0, '>': 1, 'v': 2, '<': 3};
+const cartSymbols = Object.keys(direction);
+
+// Cart = [x, y, direction, intersections, dead]
 let carts = [];
 for (let r = 0; r < grid.length; r++) {
     for (let c = 0; c < grid[r].length; c++) {
         const symbol = grid[r][c];
 
-        if (cartsSymbols.includes(symbol)) {
-            carts.push([c, r, moves[symbol].slice(), 0]);
+        if (cartSymbols.includes(symbol)) {
+            const cart = createCart({c, r, d: direction[symbol], inter: 0});
+            carts.push(cart);
 
             if (symbol === '>' || symbol === '<') {
                 grid[r][c] = '-';
@@ -38,97 +39,51 @@ for (let r = 0; r < grid.length; r++) {
         }
     }
 }
-// 1 + 3n -> left
-// 2 + 3n -> straight
-// 3 + 3n -> right
-const getNextIntersectionMove = (intersections, move) =>  {
-    if (((intersections - 1) / 3) % 1 === 0) {
-        if (move.toString() === moves['<'].toString()) {
-            return moves['v'].slice();
-        } else if (move.toString() === moves['^'].toString()) {
-            return moves['<'].slice();
-        } else if (move.toString() === moves['>'].toString()) {
-            return moves['^'].slice();
-        } else if (move.toString() === moves['v'].toString()) {
-            return moves['>'].slice();
-        }
-    } else if (((intersections - 2) / 3) % 1 === 0) {
-        return move;
-    } else {
-        if (move.toString() === moves['<'].toString()) {
-            return moves['^'].slice();
-        } else if (move.toString() === moves['^'].toString()) {
-            return moves['>'].slice();
-        } else if (move.toString() === moves['>'].toString()) {
-            return moves['v'].slice();
-        } else if (move.toString() === moves['v'].toString()) {
-            return moves['<'].slice();
-        }
-    }
-}
 
 const findCrash = (grid, carts) => {
-    let found = false;
-
-    while (!found) {
-        carts.sort(([x1, y1], [x2, y2]) => y1 - y2);
+    while (carts.length !== 1) {
+        carts.sort((c1, c2) => (c1.r - c2.r || c1.c - c2.c));
        
         for (let i = 0; i < carts.length; i++) {
-            let cart = carts[i];
-            cart[0] += cart[2][0];
-            cart[1] += cart[2][1];
+            const cart = carts[i];
+            if (cart.dead) {
+                continue;
+            }
+            const rr = cart.r + DR[cart.d];
+            const cc = cart.c + DC[cart.d];
+            const symbol = grid[rr][cc];
 
-            const [x, y] = cart;
-            const symbol = grid[y][x];
-
+            // up, right, down, left
             if (symbol === '+') {
-                cart[3]++;
-                cart[2] = getNextIntersectionMove(cart[3], cart[2]);
+                // Turn left
+                if (cart.inter === 0) {
+                    cart.d = (cart.d + 3) % 4;
+                // Turn right
+                } else if (cart.inter === 2) {
+                    cart.d = (cart.d + 1) % 4;
+                }
+
+                cart.inter = (cart.inter + 1) % 3;
             } else if (symbol === '/') {
-                if (
-                    cart[2].toString() === moves['^'].toString() ||
-                    cart[2].toString() === moves['<'].toString()
-                ) {
-                    cart[2] = cart[2].map(x => ++x);
-                } else if (
-                    cart[2].toString() === moves['>'].toString() ||
-                    cart[2].toString() === moves['v'].toString()
-                ) {
-                    cart[2] = cart[2].map(x => --x);
-                }
+                cart.d = {0: 1, 1: 0, 2: 3, 3: 2}[cart.d];
             } else if (symbol === '\\') {
-                if (
-                    cart[2].toString() === moves['^'].toString() ||
-                    cart[2].toString() === moves['>'].toString()
-                ) {
-                    cart[2][0]--;
-                    cart[2][1]++;
-                } else if (
-                    cart[2].toString() === moves['<'].toString() ||
-                    cart[2].toString() === moves['v'].toString()
-                ) {
-                    cart[2][0]++;
-                    cart[2][1]--;
-                }
+                cart.d = {0: 3, 1: 2, 2: 1, 3: 0}[cart.d];
             }
 
-            let match = {};
-            for (let i = 0; i < carts.length; i++) {
-                const c = carts[i];
-                const key = `${c[0]} ${c[1]}`;
+            const foundIdx = carts.findIndex(c => c.r === rr && c.c === cc);
+            
+            if (foundIdx !== -1) {
+                carts[i].dead = true;
+                carts[foundIdx].dead = true;
+            }
 
-                if (match[key]) {
-                    found = true;
-                    console.log(key);
-                    return key;
-                } else {
-                    match[key] = true;
-                }
-            };
+            cart.r = rr;
+            cart.c = cc;
         }
+        carts = carts.filter(c => !c.dead);
     }
 
-    return '';
-};
+    console.log(carts);
+}
 
 findCrash(grid, carts);
