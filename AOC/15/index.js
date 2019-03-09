@@ -17,8 +17,9 @@ const grid = fs
   .split('\n')
   .map(r => r.trim().split(''));
 
-const createUnit = ({u, coord, hp=200, att=3}) => ({u, coord, hp, att});
-const units = [];
+const createUnit = ({u, coord, hp=200, att=3, dead=false}) =>
+  ({u, coord, hp, att, dead});
+let units = [];
 
 const wall = '#';
 const elf = 'E';
@@ -28,8 +29,8 @@ const isElf = s => s === elf;
 const isGoblin = s => s === goblin;
 const isUnit = s => isElf(s) || isGoblin(s);
 
-const getElves = arr => arr.filter(u => isElf(u.u));
-const getGoblins = arr => arr.filter(u => isGoblin(u.u));
+const getElves = arr => arr.filter(u => isElf(u.u) && !u.dead);
+const getGoblins = arr => arr.filter(u => isGoblin(u.u) && !u.dead);
 let isGameOver = false;
 let rounds = 0;
 
@@ -64,8 +65,8 @@ grid
     .forEach((c, cIdx) =>
       isUnit(c) && units.push(createUnit({u: c, coord: `${rIdx},${cIdx}`}))));
 
-console.log(grid);
-console.log(units);
+// console.log(grid);
+// console.log(units);
 // console.log(adjList);
 
 /**
@@ -123,16 +124,36 @@ const getPath = (visited, end) => {
 }
 
 const getClosestUnits = (alist, ulist, coord, unit) => {
-  const u = ulist.filter(x => x.u === unit);
-  const distances = u.reduce((acc, x) => {
-    acc[x.coord] = getShortestPath(alist, ulist, coord, x.coord).length;
+  const u = ulist.filter(x => x.u === unit && !x.dead);
+
+  const paths = u.reduce((acc, x) => {
+    const path = getShortestPath(alist, ulist, coord, x.coord);
+
+    if (path.length > 1) {
+      acc[x.coord] = path;
+    }
+
     return acc;
   }, {});
 
-  return [
-    u.sort((a, b) => distances[a.coord] - distances[b.coord]),
-    distances,
-  ];
+  const closeUnits = u.filter(x => paths[x.coord] && paths[x.coord].length);
+  
+  const uSorted = closeUnits.sort((a, b) => {
+    const pathA = paths[a.coord];
+    const pathB = paths[b.coord];
+    const d = pathA.length - pathB.length;
+
+    if (d === 0) {
+      const [r1, c1] = pathA[pathA.length - 1].split(',').map(Number);
+      const [r2, c2] = pathB[pathB.length - 1].split(',').map(Number);
+
+      return r1 === r2 ? c1 - c2 : r1 - r2;
+    } else {
+      return d;
+    }
+  });
+
+  return uSorted;
 };
 
 const getAttackCoord = (enemies, coord) => {
@@ -144,9 +165,9 @@ const getAttackCoord = (enemies, coord) => {
 
   const nearby = enemies.filter(x => {
     return x.coord === top ||
-    x.coord === right ||
-    x.coord === down ||
-    x.coord === left;
+      x.coord === left ||
+      x.coord === right ||
+      x.coord === down;
   });
   
   if (!nearby.length) {
@@ -159,15 +180,13 @@ const getAttackCoord = (enemies, coord) => {
   return nearby.find(x => x.hp === min).coord;
 };
 
-const attack = (units, coord, att) => {
-  for (unit of units.entries()) {
-    const [idx, u] = unit;
-
+const attack = (list, coord, att) => {
+  for (u of list) {
     if (u.coord === coord) {
       u.hp -= att;
 
       if (u.hp <= 0) {
-        units.splice(idx, 1);
+        u.dead = true;
       }
 
       return true;
@@ -177,72 +196,87 @@ const attack = (units, coord, att) => {
   return false;
 };
 
-while (!isGameOver) {
-  for (u of units) {
-    const elves = getElves(units);
-    const goblins = getGoblins(units);
-    
-    if (!elves.length) {
-      isGameOver = true;
-      break;
-    }
+const attackNearby = (list, hero, enemies) => {
+  const attackCoord = getAttackCoord(enemies, hero.coord);
 
-    if (!goblins.length) {
-      isGameOver = true;
-      break;
-    }
-    
-    if (isGoblin(u.u)) {
-      const attackCoord = getAttackCoord(elves, u.coord);
+  if (attackCoord.length) {
+    return attack(list, attackCoord, hero.att);
+  }
 
-      if (attackCoord.length) {
-        attack(units, attackCoord, u.att);
-      } else {
-        const [closeElves, _] = getClosestUnits(adjList, units, u.coord, elf);
-        const closest = closeElves[0];
-        const pathToElf = getShortestPath(adjList, units, u.coord, closest.coord);
-        // console.log(`pathToElf`);
-        // console.log(pathToElf);
-        
-        if (pathToElf[1]) {
-          // console.log(`pathToElf: ${pathToElf[1]}`);
-          // console.log(`old u.coord: ${u.coord}`);
-          u.coord = pathToElf[1];
+  return false;
+}
+
+const play = (adjList, units) => {
+  while (!isGameOver) {
+    for (u of units) {
+      if (u.dead) {
+        continue;
+      }
+
+      const elves = getElves(units);
+      const goblins = getGoblins(units);
+      
+      if (!elves.length || !goblins.length) {
+        const hp = units.reduce((y, x) => x.dead ? y : x.hp + y, 0);
+        console.log(units);
+        console.log(rounds);
+        return rounds * hp;
+      }
+      
+      if (isGoblin(u.u)) {
+        const attacked = attackNearby(units, u, elves);
+
+        if (!attacked) {
+          const closeElves = getClosestUnits(adjList, units, u.coord, elf);
+
+          if (closeElves.length !== 0) {
+            const closest = closeElves[0];
+            const pathToElf = getShortestPath(adjList, units, u.coord, closest.coord);
+
+            if (pathToElf[1]) {
+              u.coord = pathToElf[1];
+              attackNearby(units, u, elves);
+            }
+          }
+        }
+      } else if (isElf(u.u)) {
+        const attacked = attackNearby(units, u, goblins);
+  
+        if (!attacked) {
+          const closeGoblins = getClosestUnits(adjList, units, u.coord, goblin);
+          // console.log(closeGoblins);
+          
+          if (closeGoblins.length !== 0) {
+            const closest = closeGoblins[0];
+            const pathToGoblin = getShortestPath(adjList, units, u.coord, closest.coord);
+    
+            if (pathToGoblin[1]) {
+              u.coord = pathToGoblin[1];
+              attackNearby(units, u, goblins);
+            }
+          }
         }
       }
-    } else if (isElf(u.u)) {
-      const attackCoord = getAttackCoord(goblins, u.coord);
-
-      if (attackCoord.length) {
-        attack(units, attackCoord, u.att);
-      } else {
-        const [closeGoblins, _] = getClosestUnits(units, u.coord, goblin);
-        // console.log('closeGoblins');
-        // console.log(closeGoblins);
-        const closest = closeGoblins[0];
-        const pathToGoblin = getShortestPath(adjList, units, u.coord, closest.coord);
-        // console.log(`pathToGoblin`);
-        // console.log(pathToGoblin);
-
-        if (pathToGoblin[1]) {
-          // console.log(`pathToGoblin: ${pathToGoblin[1]}`);
-          // console.log(`old u.coord: ${u.coord}`);
-          u.coord = pathToGoblin[1];
-        }
-      }
-    }
-
+    }; 
+  
+    units = units.filter(x => !x.dead);
     units.sort((a, b) => {
-      const [r1, c1] = a.coord.split(',');
-      const [r2, c2] = b.coord.split(',');
-
+      const [r1, c1] = a.coord.split(',').map(Number);
+      const [r2, c2] = b.coord.split(',').map(Number);
+  
       return r1 === r2 ? c1 - c2 : r1 - r2;
     });
-    
-  };
-
-  rounds++;
-  console.log(`units`);
-  console.log(units);
-  console.log(`rounds: ${rounds}`);
+  
+    // console.log(`rounds: ${rounds}`);
+    console.log(`units`);
+    console.log(units);
+    console.log();
+    rounds++;
+    // if (rounds === 3) {
+      break;
+    // }
+  }
 }
+
+const score = play(adjList, units);
+console.log(score);
